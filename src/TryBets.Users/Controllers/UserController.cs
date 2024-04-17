@@ -19,12 +19,34 @@ public class UserController : Controller
     [HttpPost("signup")]
     public IActionResult Post([FromBody] User user)
     {
-       throw new NotImplementedException();
+        try {
+            var newUser = _repository.Post(user);
+            string token = new TokenManager().Generate(newUser);
+            AuthDTOResponse response = new AuthDTOResponse { Token = token };
+            return Created("", response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("login")]
     public IActionResult Login([FromBody] AuthDTORequest login)
     {
-        throw new NotImplementedException();
+        try {
+            var user = _repository.Login(login);
+            if (user == null || user.Password != login.Password)
+            {
+                return BadRequest();
+            }
+            var tokenManager = new TokenManager();
+            var token = tokenManager.Generate(user);
+            return Ok(new AuthDTOResponse { Token = token });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }
